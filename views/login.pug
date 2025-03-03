@@ -1,0 +1,17 @@
+extends layout
+
+block content
+  .login-container
+    h1 Connexion
+    p Pour vous connecter à l'intranet, entrez votre identifiant et mot de passe.
+    
+    form(method="POST" action="/auth/login")
+      .form-group
+        label(for="email") Email :
+        input#email(type="email" name="email" placeholder="ex: owen.lopez@example.com" required)
+      
+      .form-group
+        label(for="password") Mot de passe :
+        input#password(type="password" name="password" required)
+      
+      button.btn-connexion(type="submit") CONNEXION 
