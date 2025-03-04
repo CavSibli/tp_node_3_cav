@@ -1,0 +1,28 @@
+//- Dashboard Page Template 
+extends layout
+
+block content
+  .dashboard-container
+    h1 Bienvenue sur l'intranet
+    p.subtitle La plate-forme de l'entreprise qui vous permet de retrouver tous vos collaborateurs.
+    
+    h2 Avez-vous dit bonjour à :
+    
+    .collaborateur-card
+      img.profile-img(src=user.photo, alt=`Photo de ${user.firstname} ${user.lastname}`)
+      .collaborateur-info
+        .header-info
+          h3 #{user.firstname} #{user.lastname}
+          span.age (#{user.age} ans)
+          span.badge(class=user.category.toLowerCase())= user.category
+        p.location #{user.city}, #{user.country}
+        .contact-info
+          p
+            a(href=`mailto:${user.email}`)= user.email
+          p
+            span.phone= user.phone
+          p
+            span.birthday Anniversaire : #{user.birthday}
+    
+    .action-button
+      a.btn-primary(href="/dashboard") DIRE BONJOUR À QUELQU'UN D'AUTRE 

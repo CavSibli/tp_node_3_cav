@@ -53,4 +53,141 @@ body {
   
   .btn-connexion:hover {
     background: #c0392b;
+  }
+  
+  .error-message {
+    background-color: #fee;
+    border: 1px solid #fcc;
+    color: #c00;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+  
+  /* Styles pour le dashboard */
+  .dashboard-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    text-align: center;
+  }
+  
+  .dashboard-container h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .subtitle {
+    color: #666;
+    margin-bottom: 3rem;
+  }
+  
+  .collaborateur-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin: 2rem auto;
+    max-width: 600px;
+    text-align: left;
+    display: flex;
+    gap: 2rem;
+  }
+  
+  .profile-img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .collaborateur-info {
+    flex: 1;
+  }
+  
+  .header-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .header-info h3 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+  
+  .age {
+    color: #666;
+  }
+  
+  .badge {
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+  }
+  
+  .badge.technique {
+    background: #3498db;
+  }
+  
+  .badge.marketing {
+    background: #2ecc71;
+  }
+  
+  .badge.client {
+    background: #e67e22;
+  }
+  
+  .location {
+    color: #666;
+    margin-bottom: 1rem;
+  }
+  
+  .contact-info {
+    color: #666;
+  }
+  
+  .contact-info p {
+    margin: 0.5rem 0;
+  }
+  
+  .contact-info a {
+    color: #e74c3c;
+    text-decoration: none;
+  }
+  
+  .contact-info a:hover {
+    text-decoration: underline;
+  }
+  
+  .btn-primary {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-top: 2rem;
+    text-decoration: none;
+    display: inline-block;
+  }
+  
+  .btn-primary:hover {
+    background: #c0392b;
+  }
+  
+  .btn-logout {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: 1px solid white;
+    border-radius: 4px;
+  }
+  
+  .btn-logout:hover {
+    background: rgba(255, 255, 255, 0.1);
   } 
