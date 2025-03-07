@@ -147,7 +147,8 @@ app.post('/users/edit/:id', requireAuth, (req, res) => {
         city,
         country,
         category,
-        photo
+        photo,
+        password
     } = req.body;
     usersData[userIndex] = {
         ...usersData[userIndex],
@@ -161,8 +162,37 @@ app.post('/users/edit/:id', requireAuth, (req, res) => {
         category,
         photo: photo || usersData[userIndex].photo
     };
+    if (password) {
+        usersData[userIndex].password = bcrypt.hashSync(password, 10);
+    }
     fs.writeFileSync(path.join(__dirname, 'data', 'users.json'), JSON.stringify(usersData, null, 2));
     res.redirect('/users?success=edit');
+});
+app.get('/users/add', requireAuth, (req, res) => {
+    if (!req.session.user.isAdmin) {
+        return res.status(403).send('Accès non autorisé');
+    }
+    res.render('add-user');
+});
+app.post('/users/add', requireAuth, async (req, res) => {
+    if (!req.session.user.isAdmin) {
+        return res.status(403).send('Accès non autorisé');
+    }
+    const usersData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'users.json'), 'utf8'));
+    const { password, ...otherData } = req.body;
+    
+    // Hacher le mot de passe
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const newUser = {
+        id: String(usersData.length + 1), // Générer un nouvel ID
+        password: hashedPassword,
+        ...otherData
+    };
+    
+    usersData.push(newUser);
+    fs.writeFileSync(path.join(__dirname, 'data', 'users.json'), JSON.stringify(usersData, null, 2));
+    res.redirect('/users?success=add');
 });
 
 // Profile
