@@ -4,12 +4,38 @@ html(lang="fr")
     meta(charset="UTF-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
     title Intranet
+    link(href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet")
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css")
     link(rel="stylesheet", href="/css/style.css")
 
   body
-    header.header
-      h1 Intranet
-      if user
-        a.btn-logout(href="/logout") Déconnexion
-    main
-      block content 
+    header.header.py-3
+      .container
+        .header-left
+          h1.h3.mb-0
+            a.text-white.text-decoration-none(href="/dashboard") Intranet
+        .header-right
+          if user
+            a.btn.btn-outline-light.btn-sm(href="/users")
+              i.fas.fa-users.me-2
+              | Liste
+            .profile-dropdown
+              img.header-profile-img(src=user.photo, alt=`Photo de ${user.firstname} ${user.lastname}`)
+              .dropdown-content
+                .dropdown-header.p-3
+                  img.dropdown-profile-img(src=user.photo, alt=`Photo de ${user.firstname} ${user.lastname}`)
+                  .dropdown-user-info
+                    strong.d-block #{user.firstname} #{user.lastname}
+                    span.text-muted.small #{user.email}
+                hr.my-0
+                a.dropdown-item(href="/profile/edit") 
+                  i.fas.fa-user-edit
+                  span Modifier mon profil
+                a.dropdown-item(href="/logout")
+                  i.fas.fa-sign-out-alt
+                  span Déconnexion
+    main.py-4
+      block content
+    
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")
+    script(src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous") 

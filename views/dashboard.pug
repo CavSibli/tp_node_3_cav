@@ -9,20 +9,26 @@ block content
     h2 Avez-vous dit bonjour à :
     
     .collaborateur-card
-      img.profile-img(src=user.photo, alt=`Photo de ${user.firstname} ${user.lastname}`)
+      img.profile-img(src=randomUser.photo alt=`Photo de ${randomUser.firstname} ${randomUser.lastname}`)
       .collaborateur-info
         .header-info
-          h3 #{user.firstname} #{user.lastname}
-          span.age (#{user.age} ans)
-          span.badge(class=user.category.toLowerCase())= user.category
-        p.location #{user.city}, #{user.country}
+          h3 #{randomUser.firstname} #{randomUser.lastname}
+          span.age (#{display.age} ans)
+          span.badge(class=`badge-${randomUser.category.toLowerCase()}`) #{randomUser.category}
+        
+        .location
+          i.fas.fa-map-marker-alt
+          |  #{randomUser.city}, #{randomUser.country}
+        
         .contact-info
           p
-            a(href=`mailto:${user.email}`)= user.email
+            i.fas.fa-envelope
+            a(href=`mailto:${randomUser.email}`)  #{randomUser.email}
           p
-            span.phone= user.phone
+            i.fas.fa-phone
+            a(href=`tel:${randomUser.phone}`)  #{randomUser.phone}
           p
-            span.birthday Anniversaire : #{user.birthday}
+            i.fas.fa-birthday-cake
+            |  Anniversaire : #{display.birthday}
     
-    .action-button
-      a.btn-primary(href="/dashboard") DIRE BONJOUR À QUELQU'UN D'AUTRE 
+    a.btn-primary(href="/dashboard") Dire bonjour à quelqu'un d'autre 

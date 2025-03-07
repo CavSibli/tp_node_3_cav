@@ -1,0 +1,60 @@
+//- Add User Page Template 
+extends layout
+
+block content
+  .edit-profile-container
+    h1 Ajouter un collaborateur
+    
+    form(action="/users/add" method="POST")
+      .form-group
+        label(for="gender") * Civilité :
+        select#gender(name="gender" required)
+          option(value="male") Homme
+          option(value="female") Femme
+      
+      .form-group
+        label(for="category") * Catégorie :
+        select#category(name="category" required)
+          option(value="Marketing") Marketing
+          option(value="Technique") Technique
+          option(value="Client") Client
+      
+      .form-group
+        label(for="lastname") * Nom :
+        input#lastname(type="text" name="lastname" required)
+      
+      .form-group
+        label(for="firstname") * Prénom :
+        input#firstname(type="text" name="firstname" required)
+      
+      .form-group
+        label(for="email") * Email :
+        input#email(type="email" name="email" required)
+      
+      .form-group
+        label(for="password") * Mot de passe :
+        input#password(type="password" name="password" placeholder="(min. 8 caractères)" required minlength="8")
+      
+      .form-group
+        label(for="phone") * Téléphone :
+        input#phone(type="tel" name="phone" placeholder="01-23-45-67-89" required pattern="[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}")
+      
+      .form-group
+        label(for="birthdate") * Date de naissance :
+        input#birthdate(type="date" name="birthdate" required)
+      
+      .form-group
+        label(for="city") * Ville :
+        input#city(type="text" name="city" required)
+      
+      .form-group
+        label(for="country") * Pays :
+        input#country(type="text" name="country" required)
+      
+      .form-group
+        label(for="photo") URL de la photo :
+        input#photo(type="url" name="photo" placeholder="https://")
+      
+      .form-actions
+        button.btn-primary(type="submit") Ajouter
+        a.btn-secondary(href="/users") Annuler 

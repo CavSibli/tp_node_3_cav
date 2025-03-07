@@ -1,0 +1,18 @@
+extends layout
+
+block content
+  .container.py-5
+    .row.justify-content-center
+      .col-md-8.col-lg-6
+        .text-center
+          h1.display-1.text-danger= error.status || 500
+          h2.mb-4= message
+          if error.status === 404
+            p.text-muted.mb-4 La page que vous recherchez n'existe pas.
+          else
+            p.text-muted.mb-4 Une erreur est survenue lors du traitement de votre requête.
+          
+          a.btn.btn-primary(href="/") 
+            i.fas.fa-home.me-2
+            | Retour à l'accueil
+

@@ -1,0 +1,74 @@
+extends layout
+
+block content
+  .container.py-4
+    .row.justify-content-center
+      .col-12.col-md-8.col-lg-6
+        .card.border-0.shadow-sm
+          .card-body.p-4
+            h1.text-center.mb-4.fw-bold Modifier un collaborateur
+            
+            if error
+              .alert.alert-danger.mb-4
+                i.fas.fa-exclamation-circle.me-2
+                | #{error}
+            
+            .user-info.mb-4
+              .card.border-0.shadow-sm
+                .card-body
+                  .text-center.mb-3
+                    img.profile-img.mb-3(src=user.photo alt=`Photo de ${user.firstname} ${user.lastname}`)
+                    h3.h5.fw-bold.mb-1 #{user.firstname} #{user.lastname}
+                    .d-flex.justify-content-center.align-items-center.gap-2.mb-2
+                      span.text-muted #{display.calculateAge(user.birthdate)} ans
+                      span.badge(class=`badge-${user.category.toLowerCase()}`) #{user.category}
+                    p.text-muted.mb-3
+                      i.fas.fa-map-marker-alt.me-2
+                      | #{user.city}, #{user.country}
+                    p.text-muted
+                      i.fas.fa-birthday-cake.me-2
+                      | #{display.formatBirthday(user.birthdate)}
+            
+            form(action=`/users/edit/${user.id}` method="POST")
+              .mb-3
+                label.form-label.fw-semibold(for="firstname") Prénom *
+                input#firstname.form-control(type="text" name="firstname" value=user.firstname required)
+              
+              .mb-3
+                label.form-label.fw-semibold(for="lastname") Nom *
+                input#lastname.form-control(type="text" name="lastname" value=user.lastname required)
+              
+              .mb-3
+                label.form-label.fw-semibold(for="email") Email *
+                input#email.form-control(type="email" name="email" value=user.email required)
+              
+              .mb-3
+                label.form-label.fw-semibold(for="phone") Téléphone *
+                input#phone.form-control(type="tel" name="phone" value=user.phone required)
+              
+              .mb-3
+                label.form-label.fw-semibold(for="birthdate") Date de naissance *
+                input#birthdate.form-control(type="date" name="birthdate" value=user.birthdate required)
+              
+              .mb-3
+                label.form-label.fw-semibold(for="city") Ville *
+                input#city.form-control(type="text" name="city" value=user.city required)
+              
+              .mb-3
+                label.form-label.fw-semibold(for="country") Pays *
+                input#country.form-control(type="text" name="country" value=user.country required)
+              
+              .mb-3
+                label.form-label.fw-semibold(for="category") Catégorie *
+                select#category.form-select(name="category" required)
+                  option(value="Marketing" selected=user.category === "Marketing") Marketing
+                  option(value="Technique" selected=user.category === "Technique") Technique
+                  option(value="Client" selected=user.category === "Client") Client
+              
+              .mb-3
+                label.form-label.fw-semibold(for="photo") URL de la photo
+                input#photo.form-control(type="url" name="photo" value=user.photo)
+              
+              .d-flex.gap-2.mt-4
+                a.btn.btn-secondary(href="/users") Annuler
+                button.btn.btn-primary(type="submit") Enregistrer les modifications 

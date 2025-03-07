@@ -1,0 +1,99 @@
+extends layout
+
+block content
+  .container.py-4
+    .row.justify-content-center
+      .col-12
+        h1.text-center.mb-4.fw-bold Liste des collaborateurs
+        
+        if query && query.success === 'delete'
+          .alert.alert-success.alert-dismissible.fade.show.mb-4(role='alert')
+            i.fas.fa-check-circle.me-2
+            | L'utilisateur a été supprimé avec succès.
+            button.btn-close(type='button' data-bs-dismiss='alert' aria-label='Close')
+        
+        if query && query.success === 'edit'
+          .alert.alert-success.alert-dismissible.fade.show.mb-4(role='alert')
+            i.fas.fa-check-circle.me-2
+            | Les modifications ont été enregistrées avec succès.
+            button.btn-close(type='button' data-bs-dismiss='alert' aria-label='Close')
+        
+        .card.mb-4.border-0.shadow-sm
+          .card-body.p-4
+            form.row.g-3(method="GET" action="/users")
+              .col-md-4
+                label.form-label.fw-semibold(for="name") Rechercher par nom
+                .input-group
+                  span.input-group-text
+                    i.fas.fa-search
+                  input#name.form-control(type="text" name="name" placeholder="Nom ou prénom" value=filters.name)
+              
+              .col-md-4
+                label.form-label.fw-semibold(for="category") Catégorie
+                select#category.form-select(name="category")
+                  option(value="") Toutes les catégories
+                  option(value="Marketing" selected=filters.category === "Marketing") Marketing
+                  option(value="Technique" selected=filters.category === "Technique") Technique
+                  option(value="Client" selected=filters.category === "Client") Client
+              
+              .col-md-4
+                label.form-label.fw-semibold(for="city") Ville
+                .input-group
+                  span.input-group-text
+                    i.fas.fa-map-marker-alt
+                  input#city.form-control(type="text" name="city" placeholder="Rechercher par ville" value=filters.city)
+              
+              .col-12.text-end.mt-4
+                button.btn.btn-primary.px-4(type="submit")
+                  i.fas.fa-filter.me-2
+                  | Filtrer
+        
+        if user.isAdmin
+          .text-end.mb-4
+            a.btn.btn-primary.px-4(href="/users/add")
+              i.fas.fa-plus.me-2
+              | Ajouter un collaborateur
+        
+        if users && users.length > 0
+          .row.row-cols-1.row-cols-md-2.row-cols-xl-3.g-4
+            each collaborateur in users
+              .col
+                .card.h-100.collaborateur-card.border-0.shadow-sm
+                  .card-body.p-4
+                    .text-center.mb-3
+                      img.profile-img.mb-3(src=collaborateur.photo alt=`Photo de ${collaborateur.firstname} ${collaborateur.lastname}`)
+                      h3.h5.fw-bold.mb-1 #{collaborateur.firstname} #{collaborateur.lastname}
+                      .d-flex.justify-content-center.align-items-center.gap-2.mb-2
+                        span.text-muted #{display.calculateAge(collaborateur.birthdate)} ans
+                        span.badge(class=`badge-${collaborateur.category.toLowerCase()}`) #{collaborateur.category}
+                      p.text-muted.mb-3
+                        i.fas.fa-map-marker-alt.me-2
+                        | #{collaborateur.city}, #{collaborateur.country}
+                    
+                    .d-flex.flex-column.gap-2
+                      a.text-decoration-none.text-muted(href=`mailto:${collaborateur.email}`)
+                        i.fas.fa-envelope.me-2
+                        | #{collaborateur.email}
+                      a.text-decoration-none.text-muted(href=`tel:${collaborateur.phone}`)
+                        i.fas.fa-phone.me-2
+                        | #{collaborateur.phone}
+                      p.mb-0.text-muted
+                        i.fas.fa-birthday-cake.me-2
+                        | #{display.formatBirthday(collaborateur.birthdate)}
+                    
+                    if user.isAdmin
+                      hr.my-3
+                      .d-flex.gap-2
+                        .btn-group.gap-2
+                          a.btn.btn-sm.btn-edit(href=`/users/edit/${collaborateur.id}` role="button")
+                            i.fas.fa-edit.me-2
+                            | Éditer
+                          form.flex-grow-1(action=`/users/delete/${collaborateur.id}` method="POST")
+                            button.btn.btn-sm.btn-delete.w-100(type="submit" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')")
+                              i.fas.fa-trash.me-2
+                              | Supprimer
+        else
+          .card.border-0.shadow-sm.text-center.py-5
+            .card-body
+              i.fas.fa-search.fa-3x.text-muted.mb-3
+              p.lead.mb-0 Aucun collaborateur ne correspond à vos critères de recherche. 

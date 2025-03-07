@@ -2,16 +2,24 @@ extends layout
 
 block content
   .login-container
-    h1 Connexion
-    p Pour vous connecter à l'intranet, entrez votre identifiant et mot de passe.
+    h1 Connexion à l'intranet
+    if error
+      .error-message
+        case error
+          when "1"
+            | Identifiants incorrects
+          when "2"
+            | Veuillez vous connecter pour accéder à cette page
+          default
+            | Une erreur est survenue
     
-    form(method="POST" action="/auth/login")
+    form(action="/auth/login" method="POST")
       .form-group
         label(for="email") Email :
-        input#email(type="email" name="email" placeholder="ex: owen.lopez@example.com" required)
+        input#email(type="email" name="email" required)
       
       .form-group
         label(for="password") Mot de passe :
         input#password(type="password" name="password" required)
       
-      button.btn-connexion(type="submit") CONNEXION 
+      button.btn-connexion(type="submit") Se connecter 

@@ -1,0 +1,79 @@
+//- Edit Profile Page Template 
+extends layout
+
+block content
+  .edit-profile-container
+    h1 Modifier mon profil
+    
+    .user-info.mb-4
+      .card.border-0.shadow-sm
+        .card-body
+          .text-center.mb-3
+            img.profile-img.mb-3(src=userToEdit.photo alt=`Photo de ${userToEdit.firstname} ${userToEdit.lastname}`)
+            h3.h5.fw-bold.mb-1 #{userToEdit.firstname} #{userToEdit.lastname}
+            .d-flex.justify-content-center.align-items-center.gap-2.mb-2
+              span.text-muted #{display.calculateAge(userToEdit.birthdate)} ans
+              span.badge(class=`badge-${userToEdit.category.toLowerCase()}`) #{userToEdit.category}
+            p.text-muted.mb-3
+              i.fas.fa-map-marker-alt.me-2
+              | #{userToEdit.city}, #{userToEdit.country}
+            p.text-muted
+              i.fas.fa-birthday-cake.me-2
+              | #{display.formatBirthday(userToEdit.birthdate)}
+    
+    form(method="POST" action="/profile/update")
+      .form-group
+        label(for="gender") * Civilité :
+        select#gender(name="gender" required)
+          option(value="male" selected=userToEdit.gender === 'male') Homme
+          option(value="female" selected=userToEdit.gender === 'female') Femme
+      
+      .form-group
+        label(for="category") * Catégorie :
+        select#category(name="category" required)
+          option(value="Client" selected=userToEdit.category === 'Client') Client
+          option(value="Marketing" selected=userToEdit.category === 'Marketing') Marketing
+          option(value="Technique" selected=userToEdit.category === 'Technique') Technique
+      
+      .form-group
+        label(for="lastname") * Nom :
+        input#lastname(type="text" name="lastname" value=userToEdit.lastname required)
+      
+      .form-group
+        label(for="firstname") * Prénom :
+        input#firstname(type="text" name="firstname" value=userToEdit.firstname required)
+      
+      .form-group
+        label(for="email") * Email :
+        input#email(type="email" name="email" value=userToEdit.email required)
+      
+      .form-group
+        label(for="password") Mot de passe :
+        input#password(type="password" name="password" placeholder="(min. 8 caractères)")
+      
+      .form-group
+        label(for="password_confirm") Confirmation :
+        input#password_confirm(type="password" name="password_confirm" placeholder="(min. 8 caractères)")
+      
+      .form-group
+        label(for="phone") * Téléphone :
+        input#phone(type="tel" name="phone" value=userToEdit.phone required)
+      
+      .form-group
+        label(for="birthdate") * Date de naissance :
+        input#birthdate(type="date" name="birthdate" value=userToEdit.birthdate required)
+      
+      .form-group
+        label(for="city") * Ville :
+        input#city(type="text" name="city" value=userToEdit.city required)
+      
+      .form-group
+        label(for="country") * Pays :
+        input#country(type="text" name="country" value=userToEdit.country required)
+      
+      .form-group
+        label(for="photo") URL de la photo :
+        input#photo(type="url" name="photo" value=userToEdit.photo)
+      
+      .form-actions
+        button.btn-primary(type="submit") MODIFIER 
