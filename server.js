@@ -34,14 +34,6 @@ app.use(session({
 }));
 app.use(setUserLocals);
 
-// Authentication Middleware
-const requireAuth = (req, res, next) => {
-    if (!req.session.user) {
-        return res.redirect('/?error=2');
-    }
-    next();
-};
-
 // Routes
 // Home
 app.get('/', (req, res) => {
@@ -78,114 +70,6 @@ app.post('/auth/login', async (req, res) => {
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/');
-});
-
-// Dashboard
-app.get('/dashboard', requireAuth, async (req, res) => {
-    try {
-        const randomUser = await User.aggregate([{ $sample: { size: 1 } }]);
-        res.render('dashboard', { 
-            user: req.session.user,
-            randomUser: randomUser[0]
-        });
-    } catch (error) {
-        console.error('Erreur dashboard:', error);
-        res.redirect('/');
-    }
-});
-
-// Users
-app.get('/users', requireAuth, async (req, res) => {
-    try {
-        const { name, category, city } = req.query;
-        let query = {};
-        
-        if (name) {
-            query.$or = [
-                { firstname: new RegExp(name, 'i') },
-                { lastname: new RegExp(name, 'i') }
-            ];
-        }
-        if (category) query.category = category;
-        if (city) query.city = new RegExp(city, 'i');
-        
-        const users = await User.find(query);
-        res.render('users', { 
-            users,
-            filters: { name, category, city }
-        });
-    } catch (error) {
-        console.error('Erreur liste utilisateurs:', error);
-        res.redirect('/dashboard');
-    }
-});
-
-// CRUD Users
-app.post('/users/delete/:id', requireAuth, async (req, res) => {
-    if (!req.session.user.isAdmin) {
-        return res.status(403).send('Accès non autorisé');
-    }
-    try {
-        await User.findByIdAndDelete(req.params.id);
-        res.redirect('/users?success=delete');
-    } catch (error) {
-        console.error('Erreur suppression:', error);
-        res.redirect('/users?error=delete');
-    }
-});
-
-app.get('/users/edit/:id', requireAuth, async (req, res) => {
-    if (!req.session.user.isAdmin) {
-        return res.status(403).send('Accès non autorisé');
-    }
-    try {
-        const user = await User.findById(req.params.id);
-        if (!user) {
-            return res.status(404).send('Utilisateur non trouvé');
-        }
-        res.render('edit-user', { user });
-    } catch (error) {
-        console.error('Erreur édition:', error);
-        res.redirect('/users');
-    }
-});
-
-app.post('/users/edit/:id', requireAuth, async (req, res) => {
-    if (!req.session.user.isAdmin) {
-        return res.status(403).send('Accès non autorisé');
-    }
-    try {
-        const { password, ...userData } = req.body;
-        if (password) {
-            userData.password = await bcrypt.hash(password, 10);
-        }
-        await User.findByIdAndUpdate(req.params.id, userData);
-        res.redirect('/users?success=edit');
-    } catch (error) {
-        console.error('Erreur mise à jour:', error);
-        res.redirect('/users?error=edit');
-    }
-});
-
-app.get('/users/add', requireAuth, (req, res) => {
-    if (!req.session.user.isAdmin) {
-        return res.status(403).send('Accès non autorisé');
-    }
-    res.render('add-user');
-});
-
-app.post('/users/add', requireAuth, async (req, res) => {
-    if (!req.session.user.isAdmin) {
-        return res.status(403).send('Accès non autorisé');
-    }
-    try {
-        const newUser = new User(req.body);
-        await newUser.save();
-        res.redirect('/users?success=add');
-    } catch (error) {
-        console.error('Erreur ajout utilisateur:', error);
-        res.redirect('/users?error=add');
-    }
 });
 
 // Routes utilisateur

@@ -12,16 +12,16 @@ block content
             img.profile-img.mb-3(src=userToEdit.photo alt=`Photo de ${userToEdit.firstname} ${userToEdit.lastname}`)
             h3.h5.fw-bold.mb-1 #{userToEdit.firstname} #{userToEdit.lastname}
             .d-flex.justify-content-center.align-items-center.gap-2.mb-2
-              span.text-muted #{display.calculateAge(userToEdit.birthdate)} ans
+              span.text-muted #{display.age} ans
               span.badge(class=`badge-${userToEdit.category.toLowerCase()}`) #{userToEdit.category}
             p.text-muted.mb-3
               i.fas.fa-map-marker-alt.me-2
               | #{userToEdit.city}, #{userToEdit.country}
             p.text-muted
               i.fas.fa-birthday-cake.me-2
-              | #{display.formatBirthday(userToEdit.birthdate)}
+              | #{display.birthday}
     
-    form(method="POST" action="/profile/update")
+    form(method="POST" action="/profile/edit")
       .form-group
         label(for="gender") * Civilité :
         select#gender(name="gender" required)
