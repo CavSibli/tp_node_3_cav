@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
     gender: {
         type: String,
         required: true,
-        enum: ['male', 'female', 'other']
+        enum: ['male', 'female']
     },
     firstname: {
         type: String,
@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
+        required: true,
         trim: true
     },
     birthdate: {
@@ -38,10 +39,12 @@ const userSchema = new mongoose.Schema({
     },
     city: {
         type: String,
+        required: true,
         trim: true
     },
     country: {
         type: String,
+        required: true,
         trim: true
     },
     photo: {
@@ -50,8 +53,9 @@ const userSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ['student', 'employee', 'other'],
-        default: 'other'
+        required: true,
+        enum: ['Client', 'Marketing', 'Technique'],
+        default: 'Client'
     },
     isAdmin: {
         type: Boolean,
