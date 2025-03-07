@@ -2,20 +2,20 @@ import express from 'express';
 import session from 'express-session';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { setUserLocals } from './middleware/auth.js';
 import { handle404, handleError } from './middleware/error.js';
-import { getRandomUser, getAllUsers, filterUsers } from './services/userService.js';
-import { showDashboard, showEditProfile, updateProfile } from './controllers/userController.js';
-import { calculateAge, formatBirthday } from './utils/dateUtils.js';
+import connectDB from './config/database.js';
+import User from './models/User.js';
+import userRoutes from './routes/userRoutes.js';
 
 // Configuration
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const users = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'users.json'), 'utf8'));
 dotenv.config();
 const app = express();
+
+// Connexion à MongoDB
+connectDB();
+
+// Configuration des vues
 app.set('view engine', 'pug');
 app.set('views', './views');
 
@@ -33,10 +33,6 @@ app.use(session({
     }
 }));
 app.use(setUserLocals);
-app.use((req, res, next) => {
-    res.locals.user = req.session.user;
-    next();
-});
 
 // Authentication Middleware
 const requireAuth = (req, res, next) => {
@@ -58,158 +54,155 @@ app.get('/', (req, res) => {
 
 // Authentication
 app.post('/auth/login', async (req, res) => {
-    const { email, password } = req.body;
-    const user = users.find(u => u.email === email);
-    if (!user) {
-        return res.redirect('/?error=1');
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.redirect('/?error=1');
+        }
+        
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.redirect('/?error=1');
+        }
+        
+        req.session.user = user;
+        res.redirect('/dashboard');
+    } catch (error) {
+        console.error('Erreur de connexion:', error);
+        res.redirect('/?error=1');
     }
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-        return res.redirect('/?error=1');
-    }
-    req.session.user = user;
-    res.redirect('/dashboard');
 });
+
 app.get('/logout', (req, res) => {
     req.session.destroy();
     res.redirect('/');
 });
 
 // Dashboard
-app.get('/dashboard', requireAuth, showDashboard);
+app.get('/dashboard', requireAuth, async (req, res) => {
+    try {
+        const randomUser = await User.aggregate([{ $sample: { size: 1 } }]);
+        res.render('dashboard', { 
+            user: req.session.user,
+            randomUser: randomUser[0]
+        });
+    } catch (error) {
+        console.error('Erreur dashboard:', error);
+        res.redirect('/');
+    }
+});
 
 // Users
-app.get('/users', requireAuth, (req, res) => {
-    const { name, category, city } = req.query;
-    let filteredUsers = getAllUsers();
-    if (name || category || city) {
-        filteredUsers = filterUsers(filteredUsers, { name, category, city });
-    }
-    
-    res.render('users', { 
-        users: filteredUsers,
-        filters: { name, category, city },
-        query: req.query,
-        display: {
-            calculateAge,
-            formatBirthday
+app.get('/users', requireAuth, async (req, res) => {
+    try {
+        const { name, category, city } = req.query;
+        let query = {};
+        
+        if (name) {
+            query.$or = [
+                { firstname: new RegExp(name, 'i') },
+                { lastname: new RegExp(name, 'i') }
+            ];
         }
-    });
+        if (category) query.category = category;
+        if (city) query.city = new RegExp(city, 'i');
+        
+        const users = await User.find(query);
+        res.render('users', { 
+            users,
+            filters: { name, category, city }
+        });
+    } catch (error) {
+        console.error('Erreur liste utilisateurs:', error);
+        res.redirect('/dashboard');
+    }
 });
-app.post('/users/delete/:id', requireAuth, (req, res) => {
+
+// CRUD Users
+app.post('/users/delete/:id', requireAuth, async (req, res) => {
     if (!req.session.user.isAdmin) {
         return res.status(403).send('Accès non autorisé');
     }
-    const userId = req.params.id;
-    const usersData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'users.json'), 'utf8'));
-    const userIndex = usersData.findIndex(user => user.id === userId);
-    if (userIndex === -1) {
-        return res.status(404).send('Utilisateur non trouvé');
+    try {
+        await User.findByIdAndDelete(req.params.id);
+        res.redirect('/users?success=delete');
+    } catch (error) {
+        console.error('Erreur suppression:', error);
+        res.redirect('/users?error=delete');
     }
-    usersData.splice(userIndex, 1);
-    fs.writeFileSync(path.join(__dirname, 'data', 'users.json'), JSON.stringify(usersData, null, 2));
-    res.redirect('/users?success=delete');
 });
-app.get('/users/edit/:id', requireAuth, (req, res) => {
+
+app.get('/users/edit/:id', requireAuth, async (req, res) => {
     if (!req.session.user.isAdmin) {
         return res.status(403).send('Accès non autorisé');
     }
-    const userId = req.params.id;
-    const usersData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'users.json'), 'utf8'));
-    const userToEdit = usersData.find(user => user.id === userId);
-    if (!userToEdit) {
-        return res.status(404).send('Utilisateur non trouvé');
-    }
-    res.render('edit-user', { 
-        user: userToEdit,
-        display: {
-            calculateAge,
-            formatBirthday
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).send('Utilisateur non trouvé');
         }
-    });
+        res.render('edit-user', { user });
+    } catch (error) {
+        console.error('Erreur édition:', error);
+        res.redirect('/users');
+    }
 });
-app.post('/users/edit/:id', requireAuth, (req, res) => {
+
+app.post('/users/edit/:id', requireAuth, async (req, res) => {
     if (!req.session.user.isAdmin) {
         return res.status(403).send('Accès non autorisé');
     }
-    const userId = req.params.id;
-    const usersData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'users.json'), 'utf8'));
-    const userIndex = usersData.findIndex(user => user.id === userId);
-    if (userIndex === -1) {
-        return res.status(404).send('Utilisateur non trouvé');
+    try {
+        const { password, ...userData } = req.body;
+        if (password) {
+            userData.password = await bcrypt.hash(password, 10);
+        }
+        await User.findByIdAndUpdate(req.params.id, userData);
+        res.redirect('/users?success=edit');
+    } catch (error) {
+        console.error('Erreur mise à jour:', error);
+        res.redirect('/users?error=edit');
     }
-    const {
-        firstname,
-        lastname,
-        email,
-        phone,
-        birthdate,
-        city,
-        country,
-        category,
-        photo,
-        password
-    } = req.body;
-    usersData[userIndex] = {
-        ...usersData[userIndex],
-        firstname,
-        lastname,
-        email,
-        phone,
-        birthdate,
-        city,
-        country,
-        category,
-        photo: photo || usersData[userIndex].photo
-    };
-    if (password) {
-        usersData[userIndex].password = bcrypt.hashSync(password, 10);
-    }
-    fs.writeFileSync(path.join(__dirname, 'data', 'users.json'), JSON.stringify(usersData, null, 2));
-    res.redirect('/users?success=edit');
 });
+
 app.get('/users/add', requireAuth, (req, res) => {
     if (!req.session.user.isAdmin) {
         return res.status(403).send('Accès non autorisé');
     }
     res.render('add-user');
 });
+
 app.post('/users/add', requireAuth, async (req, res) => {
     if (!req.session.user.isAdmin) {
         return res.status(403).send('Accès non autorisé');
     }
-    const usersData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'users.json'), 'utf8'));
-    const { password, ...otherData } = req.body;
-    
-    // Hacher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    const newUser = {
-        id: String(usersData.length + 1), // Générer un nouvel ID
-        password: hashedPassword,
-        ...otherData
-    };
-    
-    usersData.push(newUser);
-    fs.writeFileSync(path.join(__dirname, 'data', 'users.json'), JSON.stringify(usersData, null, 2));
-    res.redirect('/users?success=add');
+    try {
+        const newUser = new User(req.body);
+        await newUser.save();
+        res.redirect('/users?success=add');
+    } catch (error) {
+        console.error('Erreur ajout utilisateur:', error);
+        res.redirect('/users?error=add');
+    }
 });
 
-// Profile
-app.get('/profile/edit', requireAuth, showEditProfile);
-app.post('/profile/update', requireAuth, updateProfile);
+// Routes utilisateur
+app.use('/', userRoutes);
 
 // Error Handling
 app.use(handle404);
 app.use(handleError);
 
 // Server
-const PORT = process.env.PORT;
-const server = app.listen(PORT, () => {
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
     console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
 }).on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
         console.log(`⚠️ Le port ${PORT} est déjà utilisé. Tentative avec le port ${PORT + 1}...`);
+        app.listen(PORT + 1);
     } else {
         console.error('Erreur lors du démarrage du serveur:', err);
     }

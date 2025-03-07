@@ -1,121 +1,117 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import User from '../models/User.js';
 import bcrypt from 'bcrypt';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Chemin vers le fichier users.json
-const usersFilePath = path.join(__dirname, '../data/users.json');
-
-// Lire les utilisateurs depuis le fichier
-const readUsers = () => {
-    const usersData = fs.readFileSync(usersFilePath, 'utf8');
-    return JSON.parse(usersData);
-};
-
-// Écrire les utilisateurs dans le fichier
-const writeUsers = (users) => {
-    fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
-};
-
 // Obtenir un utilisateur aléatoire
-export const getRandomUser = () => {
-    const users = readUsers();
-    const randomIndex = Math.floor(Math.random() * users.length);
-    return users[randomIndex];
+export const getRandomUser = async () => {
+    try {
+        const users = await User.aggregate([
+            { $sample: { size: 1 } },
+            {
+                $project: {
+                    _id: 1,
+                    gender: 1,
+                    firstname: 1,
+                    lastname: 1,
+                    email: 1,
+                    password: 1,
+                    phone: 1,
+                    birthdate: 1,
+                    city: 1,
+                    country: 1,
+                    photo: 1,
+                    category: 1,
+                    isAdmin: 1
+                }
+            }
+        ]);
+        
+        if (!users || users.length === 0) {
+            return null;
+        }
+
+        const user = users[0];
+        console.log('Utilisateur aléatoire trouvé:', user);
+        return user;
+    } catch (error) {
+        console.error('Erreur dans getRandomUser:', error);
+        throw error;
+    }
 };
 
 // Obtenir un utilisateur par email
-export const getUserByEmail = (email) => {
-    const users = readUsers();
-    return users.find(user => user.email === email);
+export const getUserByEmail = async (email) => {
+    const user = await User.findOne({ email });
+    return user ? user.toObject() : null;
 };
 
 // Obtenir un utilisateur par ID
-export const getUserById = (id) => {
-    const users = readUsers();
-    return users.find(user => user.id === id);
+export const getUserById = async (id) => {
+    const user = await User.findById(id);
+    return user ? user.toObject() : null;
 };
 
 // Obtenir tous les utilisateurs
-export const getAllUsers = () => {
-    return readUsers();
+export const getAllUsers = async () => {
+    const users = await User.find();
+    return users.map(user => user.toObject());
 };
 
 // Mettre à jour un utilisateur
-export const updateUser = (id, userData) => {
-    const users = readUsers();
-    const index = users.findIndex(user => user.id === id);
-    if (index === -1) return false;
-
+export const updateUser = async (id, userData) => {
     // Si un nouveau mot de passe est fourni, le hasher
     if (userData.password) {
-        userData.password = bcrypt.hashSync(userData.password, 10);
+        userData.password = await bcrypt.hash(userData.password, 10);
     }
 
-    users[index] = { ...users[index], ...userData };
-    writeUsers(users);
-    return users[index];
+    const user = await User.findByIdAndUpdate(id, userData, { new: true });
+    return user ? user.toObject() : null;
 };
 
 // Ajouter un nouvel utilisateur
-export const addUser = (userData) => {
-    const users = readUsers();
-    const newId = String(Math.max(...users.map(u => parseInt(u.id))) + 1);
-    
-    const newUser = {
-        id: newId,
+export const addUser = async (userData) => {
+    const newUser = new User({
         ...userData,
-        password: bcrypt.hashSync(userData.password, 10),
+        password: await bcrypt.hash(userData.password, 10),
         isAdmin: false
-    };
-
-    users.push(newUser);
-    writeUsers(users);
-    return newUser;
+    });
+    const savedUser = await newUser.save();
+    return savedUser.toObject();
 };
 
 // Supprimer un utilisateur
-export const deleteUser = (id) => {
-    const users = readUsers();
-    const filteredUsers = users.filter(user => user.id !== id);
-    writeUsers(filteredUsers);
-    return true;
+export const deleteUser = async (id) => {
+    const result = await User.findByIdAndDelete(id);
+    return result !== null;
 };
 
 // Vérifier les identifiants de connexion
-export const verifyCredentials = (email, password) => {
-    const user = getUserByEmail(email);
+export const verifyCredentials = async (email, password) => {
+    const user = await getUserByEmail(email);
     if (!user) return null;
     
-    const isValid = bcrypt.compareSync(password, user.password);
+    const isValid = await bcrypt.compare(password, user.password);
     return isValid ? user : null;
 };
 
 // Filtrer les utilisateurs
-export const filterUsers = (filters) => {
-    let users = readUsers();
+export const filterUsers = async (filters) => {
+    let query = {};
     
     if (filters.name) {
-        const searchTerm = filters.name.toLowerCase();
-        users = users.filter(user => 
-            user.firstname.toLowerCase().includes(searchTerm) ||
-            user.lastname.toLowerCase().includes(searchTerm)
-        );
+        query.$or = [
+            { firstname: new RegExp(filters.name, 'i') },
+            { lastname: new RegExp(filters.name, 'i') }
+        ];
     }
     
     if (filters.category && filters.category !== '- Aucun -') {
-        users = users.filter(user => user.category === filters.category);
+        query.category = filters.category;
     }
     
     if (filters.city) {
-        const searchTerm = filters.city.toLowerCase();
-        users = users.filter(user => 
-            user.city.toLowerCase().includes(searchTerm)
-        );
+        query.city = new RegExp(filters.city, 'i');
     }
     
-    return users;
+    const users = await User.find(query);
+    return users.map(user => user.toObject());
 }; 

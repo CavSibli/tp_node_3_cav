@@ -32,9 +32,9 @@ block content
                 label.form-label.fw-semibold(for="category") Catégorie
                 select#category.form-select(name="category")
                   option(value="") Toutes les catégories
-                  option(value="Marketing" selected=filters.category === "Marketing") Marketing
-                  option(value="Technique" selected=filters.category === "Technique") Technique
-                  option(value="Client" selected=filters.category === "Client") Client
+                  option(value="student" selected=filters.category === "student") Étudiant
+                  option(value="employee" selected=filters.category === "employee") Employé
+                  option(value="other" selected=filters.category === "other") Autre
               
               .col-md-4
                 label.form-label.fw-semibold(for="city") Ville
@@ -48,7 +48,7 @@ block content
                   i.fas.fa-filter.me-2
                   | Filtrer
         
-        if user.isAdmin
+        if user && user.isAdmin
           .text-end.mb-4
             a.btn.btn-primary.px-4(href="/users/add")
               i.fas.fa-plus.me-2
@@ -64,31 +64,36 @@ block content
                       img.profile-img.mb-3(src=collaborateur.photo alt=`Photo de ${collaborateur.firstname} ${collaborateur.lastname}`)
                       h3.h5.fw-bold.mb-1 #{collaborateur.firstname} #{collaborateur.lastname}
                       .d-flex.justify-content-center.align-items-center.gap-2.mb-2
-                        span.text-muted #{display.calculateAge(collaborateur.birthdate)} ans
-                        span.badge(class=`badge-${collaborateur.category.toLowerCase()}`) #{collaborateur.category}
+                        if collaborateur.display && collaborateur.display.age
+                          span.text-muted #{collaborateur.display.age} ans
+                        if collaborateur.category
+                          span.badge(class=`badge-${collaborateur.category.toLowerCase()}`) #{collaborateur.category}
                       p.text-muted.mb-3
                         i.fas.fa-map-marker-alt.me-2
-                        | #{collaborateur.city}, #{collaborateur.country}
+                        | #{collaborateur.city || 'Ville non spécifiée'}, #{collaborateur.country || 'Pays non spécifié'}
                     
                     .d-flex.flex-column.gap-2
-                      a.text-decoration-none.text-muted(href=`mailto:${collaborateur.email}`)
-                        i.fas.fa-envelope.me-2
-                        | #{collaborateur.email}
-                      a.text-decoration-none.text-muted(href=`tel:${collaborateur.phone}`)
-                        i.fas.fa-phone.me-2
-                        | #{collaborateur.phone}
-                      p.mb-0.text-muted
-                        i.fas.fa-birthday-cake.me-2
-                        | #{display.formatBirthday(collaborateur.birthdate)}
+                      if collaborateur.email
+                        a.text-decoration-none.text-muted(href=`mailto:${collaborateur.email}`)
+                          i.fas.fa-envelope.me-2
+                          | #{collaborateur.email}
+                      if collaborateur.phone
+                        a.text-decoration-none.text-muted(href=`tel:${collaborateur.phone}`)
+                          i.fas.fa-phone.me-2
+                          | #{collaborateur.phone}
+                      if collaborateur.display && collaborateur.display.birthday
+                        p.mb-0.text-muted
+                          i.fas.fa-birthday-cake.me-2
+                          | #{collaborateur.display.birthday}
                     
-                    if user.isAdmin
+                    if user && user.isAdmin
                       hr.my-3
                       .d-flex.gap-2
                         .btn-group.gap-2
-                          a.btn.btn-sm.btn-edit(href=`/users/edit/${collaborateur.id}` role="button")
+                          a.btn.btn-sm.btn-edit(href=`/users/edit/${collaborateur._id}` role="button")
                             i.fas.fa-edit.me-2
                             | Éditer
-                          form.flex-grow-1(action=`/users/delete/${collaborateur.id}` method="POST")
+                          form.flex-grow-1(action=`/users/delete/${collaborateur._id}` method="POST")
                             button.btn.btn-sm.btn-delete.w-100(type="submit" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')")
                               i.fas.fa-trash.me-2
                               | Supprimer
